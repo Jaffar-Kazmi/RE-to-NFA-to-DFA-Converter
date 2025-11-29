@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Automata Visualizer</title>
+    <style>
+      .accepted { color: green; }
+      .rejected { color: red; }
+    </style>
+  </head>
+  <body>
+    <h1>Automata for: (k+kkg+kk)*h*+kh*+kkh</h1>
+
+    <h2>NFA</h2>
+    <object id="nfa" type="image/svg+xml" data="nfa.svg"></object>
+
+    <h2>DFA</h2>
+    <object id="dfa" type="image/svg+xml" data="dfa.svg"></object>
+
+    <h2>Minimized DFA</h2>
+    <object id="mindfa" type="image/svg+xml" data="mindfa.svg"></object>
+
+    <h2>Test string</h2>
+    <input id="word" />
+    <button onclick="check()">Check</button>
+    <div id="result"></div>
+
+    <script>
+      async function check() {
+        const w = document.getElementById('word').value;
+        // Easiest: call your Python backend via HTTP, or precompute in JS.
+        // For now, just fake result:
+        const accepted = (w === 'kh'); // placeholder
+        document.getElementById('result').textContent =
+          accepted ? 'ACCEPTED' : 'REJECTED';
+        document.getElementById('result').className =
+          accepted ? 'accepted' : 'rejected';
+      }
+    </script>
+  </body>
+</html>
