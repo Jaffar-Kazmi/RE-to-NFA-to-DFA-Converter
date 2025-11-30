@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Automata Simulator</title>
+    <style>
+      body { font-family: sans-serif; }
+      .accepted { color: green; font-weight: bold; }
+      .rejected { color: red; font-weight: bold; }
+      object { width: 300px; height: 200px; border: 1px solid #ccc; }
+    </style>
+  </head>
+  <body>
+    <h1>Automata Simulator</h1>
+
+    <p>Regex: (k+kkg+kk)*h*+kh*+kkh</p>
+
+    <h2>Automata</h2>
+    <div>
+      <h3>NFA</h3>
+      <object type="image/svg+xml" data="/out_images/nfa.svg"></object>
+    </div>
+    <div>
+      <h3>DFA</h3>
+      <object type="image/svg+xml" data="/out_images/dfa.svg"></object>
+    </div>
+    <div>
+      <h3>Minimized DFA</h3>
+      <object type="image/svg+xml" data="/out_images/mindfa.svg"></object>
+    </div>
+
+    <h2>Test string</h2>
+    <input id="word" />
+    <button onclick="testWord()">Check</button>
+
+    <div id="results"></div>
+
+    <script>
+      async function testWord() {
+        const word = document.getElementById('word').value;
+
+        const resp = await fetch('/api/test', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ word }),
+        });
+        const data = await resp.json();
+
+        const resultsDiv = document.getElementById('results');
+        resultsDiv.innerHTML = `
+          <p>NFA: <span class="${data.nfa ? 'accepted' : 'rejected'}">
+            ${data.nfa ? 'ACCEPTED' : 'REJECTED'}
+          </span></p>
+          <p>DFA: <span class="${data.dfa ? 'accepted' : 'rejected'}">
+            ${data.dfa ? 'ACCEPTED' : 'REJECTED'}
+          </span></p>
+          <p>Min DFA: <span class="${data.mindfa ? 'accepted' : 'rejected'}">
+            ${data.mindfa ? 'ACCEPTED' : 'REJECTED'}
+          </span></p>
+        `;
+      }
+    </script>
+  </body>
+</html>
