@@ -1,0 +1,1 @@
+(k+kkg+kk)*h*+kh*+kkh
