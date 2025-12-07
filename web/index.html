@@ -1,296 +1,419 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Automata Simulator</title>
     <style>
-        :root {
-            --primary: #4f46e5;
-            --primary-hover: #4338ca;
-            --bg: #f3f4f6;
-            --card-bg: #ffffff;
-            --text-main: #1f2937;
-            --text-muted: #6b7280;
-            --success: #10b981;
-            --error: #ef4444;
-            --border-radius: 12px;
-        }
+      :root {
+        --primary: #4f46e5;
+        --primary-hover: #4338ca;
+        --bg: #f8fafc;
+        --card-bg: #ffffff;
+        --text-main: #1e293b;
+        --text-muted: #64748b;
+        --border: #e2e8f0;
+      }
 
-        body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg);
-            color: var(--text-main);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+      body {
+        font-size: 18px;
+        font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background-color: var(--bg);
+        color: var(--text-main);
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        overflow: hidden;
+      }
 
-        .container {
-            max-width: 1200px;
-            width: 100%;
-        }
+      /* Header & Tabs (Same as before) */
+      header {
+        background: var(--card-bg);
+        border-bottom: 1px solid var(--border);
+        padding: 20px 30px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-shrink: 0;
+      }
+      h1 { font-size: 2.2rem; margin: 0; color: var(--primary); font-weight: 800; }
+      .regex-badge {
+        background: #1e293b; color: #e2e8f0; padding: 10px 20px;
+        border-radius: 8px; font-family: "Courier New", monospace;
+        font-weight: bold; font-size: 1.2rem;
+      }
+      .tabs-nav {
+        display: flex; background: white; padding: 0 30px;
+        border-bottom: 1px solid var(--border); gap: 25px; flex-shrink: 0;
+      }
+      .tab-btn {
+        background: none; border: none; padding: 18px 10px;
+        font-size: 1.15rem; color: var(--text-muted); cursor: pointer;
+        position: relative; font-weight: 600;
+      }
+      .tab-btn:hover { color: var(--primary); }
+      .tab-btn.active { color: var(--primary); font-weight: 800; }
+      .tab-btn.active::after {
+        content: ""; position: absolute; bottom: 0; left: 0; width: 100%;
+        height: 4px; background: var(--primary); border-radius: 4px 4px 0 0;
+      }
 
-        /* Header Section */
-        header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
+      main { flex: 1; overflow-y: auto; padding: 30px; position: relative; }
+      .tab-content { display: none; height: 100%; flex-direction: column; }
+      .tab-content.active { display: flex; animation: fadeIn 0.3s ease; }
 
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            color: var(--text-main);
-        }
+      .diagram-container {
+        background: white; border: 1px solid var(--border);
+        border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        flex: 1; overflow: auto; display: flex;
+        justify-content: center; align-items: center; padding: 20px; min-height: 400px;
+      }
+      object { width: 100%; height: 85%; min-height: 550px; }
 
-        .regex-container {
-            background: #1e293b;
-            color: #e2e8f0;
-            padding: 15px 25px;
-            border-radius: var(--border-radius);
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 1.1rem;
-            display: inline-block;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
+      /* --- Simulation Split View --- */
+      .sim-container {
+        display: flex;
+        gap: 30px;
+        height: 100%;
+        min-height: 600px; /* Ensure space for diagram */
+      }
 
-        .regex-label {
-            color: #94a3b8;
-            font-size: 0.9rem;
-            margin-right: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
+      /* Left Side: Controls */
+      .sim-controls {
+        flex: 1;
+        background: white;
+        padding: 30px;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        max-width: 400px;
+      }
 
-        /* Diagram Grid */
-        .diagram-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-bottom: 40px;
-        }
+      /* Right Side: Visual Trace */
+      .sim-visual {
+        flex: 2;
+        background: white;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        overflow: hidden; /* Important for SVG zoom/pan if you add it later */
+        display: flex;
+        flex-direction: column;
+      }
+      
+      .sim-visual-header {
+        padding: 15px;
+        background: #f1f5f9;
+        border-bottom: 1px solid var(--border);
+        font-weight: bold;
+        color: var(--text-muted);
+      }
 
-        .card {
-            background: var(--card-bg);
-            border-radius: var(--border-radius);
-            padding: 20px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            transition: transform 0.2s;
-        }
+      /* This container holds the Inline SVG */
+      #trace-svg-container {
+        flex: 1;
+        overflow: auto;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+      }
+      
+      #trace-svg-container svg {
+        width: 100%;
+        height: 100%;
+        max-height: 80vh;
+      }
 
-        .card:hover {
-            transform: translateY(-2px);
-        }
+      /* --- SVG HIGHLIGHTING CLASSES --- */
+      
+      /* Active Node (State) */
+      .highlight-node ellipse, .highlight-node polygon {
+        fill: #fcd34d !important; /* Yellow background */
+        stroke: #b45309 !important; /* Dark orange border */
+        stroke-width: 3px !important;
+      }
+      .highlight-node text {
+        fill: #000000 !important;
+        font-weight: bold !important;
+      }
 
-        .card h3 {
-            margin-top: 0;
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            border-bottom: 2px solid var(--bg);
-            padding-bottom: 10px;
-            width: 100%;
-            text-align: center;
-        }
+      /* Active Edge (Transition Arrow) */
+      .highlight-edge path {
+        stroke: #ef4444 !important; /* Red Line */
+        stroke-width: 4px !important;
+      }
+      .highlight-edge polygon {
+        fill: #ef4444 !important; /* Red Arrowhead */
+        stroke: #ef4444 !important;
+      }
 
-        object {
-            width: 100%;
-            height: 250px; /* Increased height for better visibility */
-            border: none;
-        }
+      /* Inputs & Buttons */
+      h2 { margin-top: 0; font-size: 1.5rem; margin-bottom: 20px; }
+      .input-group { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;}
+      input { flex: 1; padding: 12px; border: 2px solid #cbd5e1; border-radius: 8px; font-size: 1.1rem; }
+      button { background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 1.1rem; }
+      button:hover { background: var(--primary-hover); }
+      button.secondary { background: #64748b; }
+      button.secondary:hover { background: #475569; }
 
-        /* Testing Section */
-        .test-section {
-            background: var(--card-bg);
-            padding: 30px;
-            border-radius: var(--border-radius);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            max-width: 600px;
-            margin: 0 auto;
-            text-align: center;
-        }
+      /* Trace Info Box */
+      #step-info {
+        margin-top: auto;
+        padding: 20px;
+        background: #f8fafc;
+        border-top: 2px solid #e2e8f0;
+        font-family: monospace;
+        font-size: 1rem;
+      }
 
-        .input-group {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
+      /* Single Result Banner */
+      .single-result {
+        text-align: center; padding: 15px; margin-top: 20px;
+        border-radius: 8px; font-size: 1.2rem; font-weight: 900;
+        text-transform: uppercase;
+      }
+      .single-result.acc { background: #d1fae5; color: #065f46; border: 2px solid #059669; }
+      .single-result.rej { background: #fee2e2; color: #991b1b; border: 2px solid #dc2626; }
 
-        input {
-            flex: 1;
-            padding: 12px 15px;
-            font-size: 1rem;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            transition: border-color 0.2s;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-
-        button {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            font-size: 1rem;
-            font-weight: 600;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-
-        button:hover {
-            background-color: var(--primary-hover);
-        }
-
-        button:disabled {
-            background-color: var(--text-muted);
-            cursor: not-allowed;
-        }
-
-        /* Results Display */
-        #results {
-            display: flex;
-            justify-content: space-around;
-            margin-top: 20px;
-            min-height: 50px;
-        }
-
-        .result-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            opacity: 0;
-            animation: fadeIn 0.3s forwards;
-        }
-
-        .result-label {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-bottom: 5px;
-        }
-
-        .badge {
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-
-        .badge.accepted {
-            background-color: #d1fae5;
-            color: var(--success);
-        }
-
-        .badge.rejected {
-            background-color: #fee2e2;
-            color: var(--error);
-        }
-
-        @keyframes fadeIn {
-            to { opacity: 1; }
-        }
-
+      @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
-</head>
-<body>
+  </head>
+  <body>
+    <header>
+      <h1>Automata Simulator</h1>
+      <div class="regex-badge">
+        <span style="color: #94a3b8; font-size: 0.8em; margin-right:10px;">REGEX:</span>
+        <input id="regex" value="(k+kkg+kk)*h*+kh*+kkh" style="background:transparent; border:none; color:white; font-family:inherit; font-size:inherit; width:300px;" />
+      </div>
+    </header>
 
-    <div class="container">
-        <header>
-            <h1>Automata Simulator</h1>
-            <div class="regex-container">
-                <span class="regex-label">Regex</span>
-                (k+kkg+kk)*h*+kh*+kkh
-            </div>
-        </header>
+    <nav class="tabs-nav">
+      <button class="tab-btn active" onclick="openTab('nfa')">NFA Diagram</button>
+      <button class="tab-btn" onclick="openTab('dfa')">DFA Diagram</button>
+      <button class="tab-btn" onclick="openTab('mindfa')">Minimized DFA</button>
+      <button class="tab-btn" onclick="openTab('sim')">Simulation & Trace</button>
+    </nav>
 
-        <section class="diagram-grid">
-            <div class="card">
-                <h3>NFA Visualization</h3>
-                <object type="image/svg+xml" data="/out_images/nfa.svg">NFA Diagram</object>
-            </div>
-            <div class="card">
-                <h3>DFA Visualization</h3>
-                <object type="image/svg+xml" data="/out_images/dfa.svg">DFA Diagram</object>
-            </div>
-            <div class="card">
-                <h3>Minimized DFA</h3>
-                <object type="image/svg+xml" data="/out_images/mindfa.svg">Min DFA Diagram</object>
-            </div>
-        </section>
+    <main>
+      
+      <div id="nfa" class="tab-content active">
+        <div class="diagram-container">
+          <object type="image/svg+xml" data="/out_images/nfa.svg">NFA Diagram not found.</object>
+        </div>
+      </div>
 
-        <section class="test-section">
-            <h2>Test String</h2>
-            <div class="input-group">
-                <input id="word" type="text" placeholder="Enter a string to test..." onkeypress="handleEnter(event)" />
-                <button id="checkBtn" onclick="testWord()">Check String</button>
+      <div id="dfa" class="tab-content">
+        <div class="diagram-container">
+          <object type="image/svg+xml" data="/out_images/dfa.svg">DFA Diagram not found.</object>
+        </div>
+      </div>
+
+      <div id="mindfa" class="tab-content">
+        <div class="diagram-container">
+          <object type="image/svg+xml" data="/out_images/mindfa.svg">Min DFA Diagram not found.</object>
+        </div>
+      </div>
+
+      <div id="sim" class="tab-content">
+        
+        <div class="sim-container">
+            
+            <div class="sim-controls">
+                
+                <div style="margin-bottom: 40px; border-bottom: 2px solid #f1f5f9; padding-bottom: 30px;">
+                    <h2>Quick Check</h2>
+                    <div class="input-group">
+                        <input id="word" type="text" placeholder="Enter string..." onkeypress="handleEnter(event)" />
+                        <button id="checkBtn" onclick="testWord()">Check</button>
+                    </div>
+                    <div id="results"></div>
+                </div>
+
+                <div>
+                    <h2>Visual Trace</h2>
+                    <div class="input-group">
+                        <input id="word_step" placeholder="Trace string..." />
+                        <button onclick="initTrace()">Start</button>
+                    </div>
+                    
+                    <div style="display:flex; gap:10px; margin-top:10px;">
+                        <button class="secondary" style="flex:1" onclick="prevStep()">Previous</button>
+                        <button class="secondary" style="flex:1" onclick="nextStep()">Next</button>
+                    </div>
+                </div>
+
+                <div id="step-info">
+                    <p style="color:#94a3b8">Load a trace to see details...</p>
+                </div>
             </div>
-            <div id="results"></div>
-        </section>
-    </div>
+
+            <div class="sim-visual">
+                <div class="sim-visual-header">Live DFA Visualization</div>
+                <div id="trace-svg-container">
+                    <p style="color:#94a3b8">Click "Start" to load the interactive DFA.</p>
+                </div>
+            </div>
+
+        </div>
+      </div>
+
+    </main>
 
     <script>
-        function handleEnter(e) {
-            if (e.key === 'Enter') testWord();
+      function openTab(tabName) {
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(tabName).classList.add('active');
+        const btn = Array.from(document.querySelectorAll('.tab-btn'))
+            .find(b => b.getAttribute('onclick').includes(tabName));
+        if(btn) btn.classList.add('active');
+      }
+
+      function handleEnter(e) { if (e.key === "Enter") testWord(); }
+
+      // --- Quick Check Logic ---
+      async function testWord() {
+        const input = document.getElementById("word");
+        const regexVal = document.getElementById("regex").value; 
+        const button = document.getElementById("checkBtn");
+        const resultsDiv = document.getElementById("results");
+
+        button.disabled = true;
+        button.innerText = "...";
+        resultsDiv.innerHTML = ""; 
+
+        try {
+          const resp = await fetch("/api/test", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ regex: regexVal, word: input.value }), 
+          });
+
+          if (!resp.ok) throw new Error(`Status: ${resp.status}`);
+          const data = await resp.json();
+
+          const isAccepted = data.dfa; 
+          resultsDiv.innerHTML = `
+            <div class="single-result ${isAccepted ? 'acc' : 'rej'}">
+                ${isAccepted ? 'ACCEPTED' : 'REJECTED'}
+            </div>
+          `;
+        } catch (error) {
+          resultsDiv.innerHTML = `<p style="color:red">Error: ${error.message}</p>`;
+        } finally {
+          button.disabled = false;
+          button.innerText = "Check";
         }
+      }
 
-        async function testWord() {
-            const input = document.getElementById('word');
-            const button = document.getElementById('checkBtn');
-            const resultsDiv = document.getElementById('results');
-            const word = input.value;
+      // --- TRACE & VISUALIZATION LOGIC ---
+      let dfaTrace = [];
+      let currentStep = 0;
 
-            // UI Loading State
-            button.disabled = true;
-            button.innerText = "Testing...";
-            resultsDiv.innerHTML = ''; // Clear previous results
+      async function initTrace() {
+        const regex = document.getElementById("regex").value;
+        const word = document.getElementById("word_step").value;
+        const infoBox = document.getElementById("step-info");
+        const container = document.getElementById("trace-svg-container");
 
-            try {
-                const resp = await fetch('/api/test', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ word }),
-                });
-                
-                if (!resp.ok) throw new Error("API Error");
-                
-                const data = await resp.json();
+        infoBox.innerHTML = "Loading trace...";
+        container.innerHTML = "Loading Diagram...";
 
-                // Helper to create HTML for a result badge
-                const createBadge = (label, isAccepted) => `
-                    <div class="result-item">
-                        <span class="result-label">${label}</span>
-                        <span class="badge ${isAccepted ? 'accepted' : 'rejected'}">
-                            ${isAccepted ? 'Accepted' : 'Rejected'}
-                        </span>
-                    </div>
-                `;
+        try {
+            // 1. Fetch the Trace Data
+            const traceResp = await fetch("/api/dfa_trace", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ regex, word }),
+            });
+            if (!traceResp.ok) throw new Error("Trace API failed");
+            const traceData = await traceResp.json();
+            dfaTrace = traceData.steps;
 
-                resultsDiv.innerHTML = `
-                    ${createBadge('NFA', data.nfa)}
-                    ${createBadge('DFA', data.dfa)}
-                    ${createBadge('Min DFA', data.mindfa)}
-                `;
+            // 2. Fetch the SVG as Text (Inline)
+            const svgResp = await fetch("/out_images/dfa.svg");
+            if (!svgResp.ok) throw new Error("SVG not found");
+            const svgText = await svgResp.text();
 
-            } catch (error) {
-                console.error(error);
-                resultsDiv.innerHTML = `<p style="color:var(--error)">Error connecting to server.</p>`;
-            } finally {
-                // Reset UI State
-                button.disabled = false;
-                button.innerText = "Check String";
+            // 3. Inject SVG into DOM
+            container.innerHTML = svgText;
+
+            // 4. Reset & Render
+            currentStep = 0;
+            renderStep();
+
+        } catch(e) {
+            infoBox.innerText = "Error: " + e.message;
+            container.innerHTML = "Failed to load visualization.";
+        }
+      }
+
+      function renderStep() {
+        if (!dfaTrace.length) return;
+
+        const st = dfaTrace[currentStep];
+        const isDead = st.next_state_id === null;
+
+        // 1. Update Info Text
+        document.getElementById("step-info").innerHTML = `
+            <strong>Step ${currentStep + 1} / ${dfaTrace.length}</strong><br><br>
+            <span style="color:#64748b">Character:</span> <strong>${st.char === null ? "START" : st.char}</strong><br>
+            <span style="color:#64748b">Current State:</span> <strong>${st.state_id}</strong><br>
+            <span style="color:#64748b">Next State:</span> <strong>${isDead ? 'TRAP' : st.next_state_id}</strong>
+        `;
+
+        // 2. Highlight Diagram
+        highlightGraph(st.state_id, st.next_state_id);
+      }
+
+      function highlightGraph(currentStateId, nextStateId) {
+        const svg = document.querySelector("#trace-svg-container svg");
+        if (!svg) return;
+
+        // A. Clear previous highlights
+        svg.querySelectorAll(".highlight-node").forEach(el => el.classList.remove("highlight-node"));
+        svg.querySelectorAll(".highlight-edge").forEach(el => el.classList.remove("highlight-edge"));
+
+        // B. Highlight Current Node
+        // Graphviz nodes usually have <title>stateId</title> inside a <g class="node">
+        const allNodes = svg.querySelectorAll(".node");
+        allNodes.forEach(node => {
+            const title = node.querySelector("title");
+            if (title && title.textContent === currentStateId.toString()) {
+                node.classList.add("highlight-node");
             }
+        });
+
+        // C. Highlight Transition Edge (if exists)
+        if (nextStateId !== null) {
+            // Graphviz standard edge naming: "node1->node2"
+            const edgeTitle = `${currentStateId}->${nextStateId}`;
+            
+            const allEdges = svg.querySelectorAll(".edge");
+            allEdges.forEach(edge => {
+                const title = edge.querySelector("title");
+                if (title && title.textContent === edgeTitle) {
+                    edge.classList.add("highlight-edge");
+                }
+            });
         }
+      }
+
+      function nextStep() {
+        if (currentStep < dfaTrace.length - 1) {
+          currentStep++;
+          renderStep();
+        }
+      }
+
+      function prevStep() {
+        if (currentStep > 0) {
+          currentStep--;
+          renderStep();
+        }
+      }
     </script>
-</body>
+  </body>
 </html>
