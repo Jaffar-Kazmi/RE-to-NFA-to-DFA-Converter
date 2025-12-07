@@ -1,7 +1,4 @@
 # Regular Expression to Deterministic Finite Automaton Converter
-## A Comprehensive Theory of Automata Implementation
-
----
 
 ## 1. Introduction
 
@@ -20,7 +17,6 @@ The primary objectives of this project are:
 Understanding the relationship between regular expressions and finite automata is fundamental to compiler design, lexical analysis, and pattern matching. This project bridges theory and practice by:
 - Making automata theory tangible through visualization
 - Enabling interactive learning of state transitions
-- Demonstrating that all these representations are equivalent
 
 ### 1.4 Scope
 The project works with regex over **any finite alphabet**. The example used throughout is:
@@ -56,7 +52,6 @@ A **Deterministic Finite Automaton (DFA)** is a 5-tuple: $(Q, \Sigma, \delta, q_
 A **Nondeterministic Finite Automaton (NFA)** allows:
 - Multiple transitions from one state on the same symbol
 - Epsilon ($\epsilon$) transitions (transitions on empty input)
-- Transition function: $\delta: Q \times (\Sigma \cup \{\epsilon\}) \to 2^Q$
 
 ### 2.3 Equivalence
 Key theorem: For any NFA, there exists an equivalent DFA accepting the same language.
@@ -430,8 +425,8 @@ Response:
 | `k` | Accept | ✓ | ✓ | ✓ | From `kh*` branch |
 | `kh` | Accept | ✓ | ✓ | ✓ | From `kh*` |
 | `kkh` | Accept | ✓ | ✓ | ✓ | Exact match |
-| `kg` | Reject | ✓ | ✓ | ✓ | No `g` after `k` alone |
-| `kkgh` | Reject | ✓ | ✓ | ✓ | Pattern requires different sequence |
+| `kg` | Reject |   |   |   | No `g` after `k` alone |
+| `kkgh` | Accept | ✓ | ✓ | ✓ | From first part + `h*` |
 | `kkghh` | Accept | ✓ | ✓ | ✓ | From first part + `h*` |
 
 ### 6.3 Automata Visualizations
@@ -440,23 +435,6 @@ The project generates three SVG diagrams:
 1. **NFA**: Shows epsilon transitions, multiple outgoing edges per symbol
 2. **DFA**: Complete transitions, deterministic structure, one edge per (state, symbol)
 3. **Minimized DFA**: Fewer states, equivalent acceptance language
-
-### 6.4 Performance Metrics
-
-- **Regex parsing**: < 1ms
-- **NFA construction**: < 5ms
-- **DFA construction**: < 10ms
-- **DFA minimization**: < 5ms
-- **SVG generation**: ~50ms per automaton
-- **String simulation**: < 1ms per character
-
-### 6.5 Interactive Simulator Features
-
-✓ **Real-time string testing** against NFA/DFA/MinDFA
-✓ **Step-by-step DFA tracing** with Next/Prev buttons
-✓ **Dynamic regex input** — rebuild automata on demand
-✓ **Visual state/transition highlighting** during simulation
-✓ **Acceptance/rejection feedback** with state information
 
 ---
 
@@ -577,6 +555,4 @@ Then open `http://127.0.0.1:5000/`
 
 ---
 
-**Total Lines of Code**: ~800 lines (Python backend + HTML/JS frontend)  
-**Development Time**: ~4-6 hours  
 **Date Completed**: December 7, 2025
