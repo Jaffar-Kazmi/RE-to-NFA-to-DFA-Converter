@@ -11,6 +11,7 @@ from automata.nfa import postfix_to_nfa, accepts
 from automata.dfa import nfa_to_dfa, dfa_accepts
 from automata.min_dfa import minimize_dfa  
 
+
 app = Flask(__name__)
 
 PROJECT_ROOT = ROOT_DIR

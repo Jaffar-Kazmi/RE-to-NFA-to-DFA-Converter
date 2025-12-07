@@ -19,39 +19,47 @@ class DFA:
         self.alphabet = alphabet
 
 def nfa_to_dfa(nfa: NFAFragment, alphabet: Set[str]) -> DFA:
-    # initial DFA state = ε-closure of NFA start
     start_set = frozenset(epsilon_closure({nfa.start}))
+
     transitions: Dict[tuple, FrozenSet[State]] = {}
     accept_states: Set[FrozenSet[State]] = set()
     unmarked: list[FrozenSet[State]] = [start_set]
     all_states: Set[FrozenSet[State]] = {start_set}
-    
-    # if start-set contains NFA accept, it's an accepting DFA state
+
     if nfa.accept in start_set:
         accept_states.add(start_set)
-    
+
+    dead_state: FrozenSet[State] | None = None
+
     while unmarked:
         S = unmarked.pop()
+
         for a in alphabet:
-            # move on symbol a, then ε-closure
             T_raw = move(S, a)
-            if not T_raw:
-                continue
-            T = frozenset(epsilon_closure(T_raw))
-            transitions[(S, a)] = T
             
-            if T not in all_states:
-                all_states.add(T)
-                unmarked.append(T)
-                # Check if this new state is accepting
-                if nfa.accept in T:
-                    accept_states.add(T)
-    
-    # Debug: print acceptance info
-    print(f"Total DFA states: {len(all_states)}")
-    print(f"Accepting states: {len(accept_states)}")
-    
+            if not T_raw:
+                # Create/use dead state for undefined transitions
+                if dead_state is None:
+                    dead_state = frozenset()
+                    all_states.add(dead_state)
+                transitions[(S, a)] = dead_state
+            else:
+                T = frozenset(epsilon_closure(T_raw))
+                transitions[(S, a)] = T
+
+                if T not in all_states:
+                    all_states.add(T)
+                    unmarked.append(T)
+                    if nfa.accept in T:
+                        accept_states.add(T)
+
+    # Dead state loops to itself on all symbols
+    if dead_state is not None:
+        for a in alphabet:
+            transitions[(dead_state, a)] = dead_state
+
     return DFA(start_set, transitions, accept_states, alphabet)
+      
 def dfa_accepts(dfa: DFA, s: str) -> bool:
     current = dfa.start
     for ch in s:
